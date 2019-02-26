@@ -46,15 +46,15 @@ namespace PDU_Writer
             //Finding current row to add onto for IT,PDU,OUTlet,Rack
             Excel.Range last = sheet.Cells.SpecialCells(Excel.XlCellType.xlCellTypeLastCell, Type.Missing);
             int last_row = last.Row-1;
-            //last row for pdus
+            //last row for pdus and insert empty line
             Excel.Range line = sheet.Rows[last_row];
             line.Insert();
             int last_rack = Int32.Parse(sheet.Cells[5][last_row-1].Value.Split('-')[2].Trim());
             int last_room = last_rack + 15;
             int last_it_position = 0;
             int last_it = 0;
-            int last_outlet = 0;
             int last_outlet_position = 0;
+            //find latest it device added
             for(int i = 44016; i < last_row; i++)
             {              
                 if (sheet.Cells[1][i].Value2.Equals("OUTLET")) 
@@ -65,6 +65,7 @@ namespace PDU_Writer
                 }
                 
             }
+            //find latest OUtlet added
             for(int i = last_row-1; i > 0; i--)
             {
                 if (sheet.Cells[1][i].Value2.Equals("OUTLET"))
@@ -82,13 +83,13 @@ namespace PDU_Writer
                 //j=pdu suffix
                 for(int j = q; j <= 254; j++)
                 {
+                    //add a new room for every 2 pdus and increment outlet,it,and pdu positions
                     if (j % 2 == 0)
                     {
                         last_rack++;
                         sheet.Rows[last_room].Insert();
                         last_row++;
                         last_it++;
-                        last_outlet++;
                         Excel.Range cell = sheet.Cells;
                         cell[1][last_room].Value = "Rack";
                         cell[2][last_room].Value = "Rack -- " + last_rack;
@@ -99,6 +100,7 @@ namespace PDU_Writer
                         cell[7][last_room].Value = "2";
                         cell[8][last_room].Value = "75";
                         cell[9][last_room].Value = "65";
+                        last_room++;
                     }
                     pdu_split[3] = j.ToString();
                     Excel.Range cells = sheet.Cells;
@@ -106,6 +108,7 @@ namespace PDU_Writer
                     for(int a = 0; a < 27; a++)
                     {
                         last_it++;
+                        //create two outlets for each IT devices
                         for(int b = 0; b < 2; b++)
                         {
                             sheet.Rows[last_outlet_position].Insert();
@@ -115,6 +118,7 @@ namespace PDU_Writer
                             cells[4][last_outlet_position].Value = (a * 2) + b + 1;
                             cells[5][last_outlet_position].Value = "DEVICE";
                             cells[6][last_outlet_position].Value = "IT Device -- " + last_it;
+                            last_outlet_position++;
                         }
                         sheet.Rows[last_it_position].Insert();
                         last_row++;
@@ -127,7 +131,9 @@ namespace PDU_Writer
                         cells[6][last_it_position].Value = "Unknown";
                         cells[7][last_it_position].Value = "Default Generated Device";
                         cells[9][last_it_position].Value = "FALSE";
+                        last_it_position++;
                     }
+                    //create PDU
                     cells[1][last_row].Value="PDU";
                     cells[2][last_row].Value = String.Join(".", pdu_split);
                     cells[4][last_row].Value = "RACK";
