@@ -1,0 +1,10 @@
+C:\Users\dreiko\source\repos\PDU_Writer\PDU_Writer\bin\Debug\PDU_Writer.exe.config
+C:\Users\dreiko\source\repos\PDU_Writer\PDU_Writer\bin\Debug\PDU_Writer.exe
+C:\Users\dreiko\source\repos\PDU_Writer\PDU_Writer\bin\Debug\PDU_Writer.pdb
+C:\Users\dreiko\source\repos\PDU_Writer\PDU_Writer\obj\Debug\PDU_Writer.Form1.resources
+C:\Users\dreiko\source\repos\PDU_Writer\PDU_Writer\obj\Debug\PDU_Writer.Properties.Resources.resources
+C:\Users\dreiko\source\repos\PDU_Writer\PDU_Writer\obj\Debug\PDU_Writer.csproj.GenerateResource.cache
+C:\Users\dreiko\source\repos\PDU_Writer\PDU_Writer\obj\Debug\PDU_Writer.csproj.CoreCompileInputs.cache
+C:\Users\dreiko\source\repos\PDU_Writer\PDU_Writer\obj\Debug\PDU_Writer.exe
+C:\Users\dreiko\source\repos\PDU_Writer\PDU_Writer\obj\Debug\PDU_Writer.pdb
+C:\Users\dreiko\source\repos\PDU_Writer\PDU_Writer\obj\Debug\PDU_Writer.csproj.ResolveComReference.cache
