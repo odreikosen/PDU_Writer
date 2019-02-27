@@ -19,19 +19,26 @@ namespace PDU_Writer
             InitializeComponent();
             this.button1.Click += new System.EventHandler(this.button1_Click);
             this.button2.Click += new System.EventHandler(this.button2_Click);
+            button3.Click += new EventHandler(button3_Click);
+            linkLabel1.Click += new EventHandler(linkLabel1Clicked);
 
         }
-
+        private void button3_Click(object sender, EventArgs e)
+        {
+            panel1.Visible = false;
+            panel2.Visible = true;
+            pdus = textBox1.Text.Split(',');
+        }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            pdus = textBox1.Text.Split(',');
+            
             OpenFileDialog open = new OpenFileDialog();
             open.Title = "Select Excel File";
             if (open.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 excel_file = open.FileName;
-                button1.Text = excel_file;
+                button3.Text = excel_file;
             }
             
         }
@@ -40,40 +47,54 @@ namespace PDU_Writer
         {
             var excel =new Excel.Application();
             excel.Visible = true;
-            excel.Workbooks.Open(Filename:excel_file, ReadOnly:false);
-            Excel.Workbook workbook = excel.ActiveWorkbook;
-            Excel.Worksheet sheet = workbook.ActiveSheet;
-            //Finding current row to add onto for IT,PDU,OUTlet,Rack
-            Excel.Range last = sheet.Cells.SpecialCells(Excel.XlCellType.xlCellTypeLastCell, Type.Missing);
-            int last_row = last.Row-1;
-            //last row for pdus and insert empty line
-            Excel.Range line = sheet.Rows[last_row];
-            line.Insert();
-            int last_rack = Int32.Parse(sheet.Cells[5][last_row-1].Value.Split('-')[2].Trim());
-            int last_room = last_rack + 15;
-            int last_it_position = 0;
-            int last_it = 0;
-            int last_outlet_position = 0;
-            //find latest it device added
-            for(int i = 44016; i < last_row; i++)
-            {              
-                if (sheet.Cells[1][i].Value2.Equals("OUTLET")) 
-                {
-                    last_it_position = i - 2;
-                    last_it = Int32.Parse(sheet.Cells[2][i-3].Value.Split('-')[2].Trim());
-                    break;
-                }
-                
-            }
-            //find latest OUtlet added
-            for(int i = last_row-1; i > 0; i--)
+            Excel.Workbook workbook;
+            Excel.Worksheet sheet;
+            //The current amount of entities in PIQ
+            int currentpdu;
+            int currentoutlet;
+            int currentit;
+            int currentrack;
+            //The current position of entity in spreadsheet
+            int linepdu;
+            int lineoutlet;
+            int lineit;
+            int linerack;
+            if (!String.IsNullOrEmpty(excel_file))
             {
-                if (sheet.Cells[1][i].Value2.Equals("OUTLET"))
-                {
-                    last_outlet_position = i + 1;
-                    break;
-                }
-            }
+                excel.Workbooks.Open(Filename: excel_file, ReadOnly: false);
+                 workbook = excel.ActiveWorkbook;
+                 sheet = workbook.ActiveSheet;
+                //Finding last row to determine current PDU
+                Excel.Range last = sheet.Cells.SpecialCells(Excel.XlCellType.xlCellTypeLastCell, Type.Missing);
+                double last_row = last.Row - 1;
+                currentpdu = (int) Math.Floor(last_row / 82.5);
+                currentoutlet = currentpdu * 54;
+                currentit = currentpdu * 27;
+                currentrack = currentpdu / 2;
+                //find current lines of pdus
+                linepdu = (int)last_row;
+                lineoutlet = linepdu - currentpdu - 4;
+                lineit = lineoutlet - currentoutlet - 2;
+                linerack = lineit -currentit - 2;
+            } else
+            {
+                workbook=excel.Workbooks.Add();
+                sheet = workbook.ActiveSheet;
+                //Find amount of pdus based off of relationships
+                currentpdu = (int) numericUpDown2.Value;
+                currentit = currentpdu * ((int)numericUpDown4.Value);
+                currentoutlet = currentit * ((int)numericUpDown5.Value);
+                currentrack = currentpdu / ((int)numericUpDown3.Value);
+                //Set positions slightly apart to allow for copy and paste
+                linerack = 1;
+                lineit = 3;
+                lineoutlet = 5;
+                linepdu = 7;
+            }                                
+            //last row for pdus and insert empty line
+            Excel.Range line = sheet.Rows[linepdu];
+            line.Insert();
+          
             //i=pdu index in pdus
             for(int i = 0; i < pdus.Length; i++)
             {
@@ -81,65 +102,68 @@ namespace PDU_Writer
                 string [] pdu_split = pdu.Split('.');
                 int q = Int32.Parse(pdu_split[3]);
                 //j=pdu suffix
-                for(int j = q; j <= 254; j++)
+                for(int j = q; j <=(int)numericUpDown1.Value; j++)
                 {
                     //add a new room for every 2 pdus and increment outlet,it,and pdu positions
-                    if (j % 2 == 0)
+                    if (j % (int)numericUpDown3.Value == 0)
                     {
-                        last_rack++;
-                        sheet.Rows[last_room].Insert();
-                        last_row++;
-                        last_it++;
+                        currentrack++;
+                        sheet.Rows[linerack].Insert();
+                        linepdu++;
+                        lineit++;
+                        lineoutlet++;
                         Excel.Range cell = sheet.Cells;
-                        cell[1][last_room].Value = "Rack";
-                        cell[2][last_room].Value = "Rack -- " + last_rack;
-                        cell[3][last_room].Value = "R" + last_rack;
-                        cell[4][last_room].Value = "ROOM";
-                        cell[5][last_room].Value = "Room -- 1";
-                        cell[6][last_room].Value = "Room -- 1";
-                        cell[7][last_room].Value = "2";
-                        cell[8][last_room].Value = "75";
-                        cell[9][last_room].Value = "65";
-                        last_room++;
+                        cell[1][linerack].Value = "Rack";
+                        cell[2][linerack].Value = "Rack -- " + currentrack;
+                        cell[3][linerack].Value = "R" + currentrack;
+                        cell[4][linerack].Value = "ROOM";
+                        cell[5][linerack].Value = "Room -- 1";
+                        cell[6][linerack].Value = "Room -- 1";
+                        cell[7][linerack].Value = "2";
+                        cell[8][linerack].Value = "75";
+                        cell[9][linerack].Value = "65";
+                        linerack++;
                     }
                     pdu_split[3] = j.ToString();
                     Excel.Range cells = sheet.Cells;
                     //create 27 IT devices for each PDU
-                    for(int a = 0; a < 27; a++)
+                    for(int a = 0; a < (int) numericUpDown4.Value; a++)
                     {
-                        last_it++;
+                        currentit++;
                         //create two outlets for each IT devices
-                        for(int b = 0; b < 2; b++)
+                        for(int b = 0; b < (int) numericUpDown5.Value; b++)
                         {
-                            sheet.Rows[last_outlet_position].Insert();
-                            last_row++;
-                            cells[1][last_outlet_position].Value = "OUTLET";
-                            cells[2][last_outlet_position].Value = String.Join(".", pdu_split);
-                            cells[4][last_outlet_position].Value = (a * 2) + b + 1;
-                            cells[5][last_outlet_position].Value = "DEVICE";
-                            cells[6][last_outlet_position].Value = "IT Device -- " + last_it;
-                            last_outlet_position++;
+                            sheet.Rows[lineoutlet].Insert();
+                            linepdu++;
+                            cells[1][lineoutlet].Value = "OUTLET";
+                            cells[2][lineoutlet].Value = String.Join(".", pdu_split);
+                            cells[4][lineoutlet].Value = (a * 2) + b + 1;
+                            cells[5][lineoutlet].Value = "DEVICE";
+                            cells[6][lineoutlet].Value = "IT Device -- " + currentit;
+                            lineoutlet++;
                         }
-                        sheet.Rows[last_it_position].Insert();
-                        last_row++;
-                        last_outlet_position++;
-                        cells[1][last_it_position].Value = "DEVICE";
-                        cells[2][last_it_position].Value = "IT Device -- " + last_it;
-                        cells[3][last_it_position].Value = "IT Device -- " + last_it;
-                        cells[4][last_it_position].Value = "RACK";
-                        cells[5][last_it_position].Value = "Rack -- " + last_rack;
-                        cells[6][last_it_position].Value = "Unknown";
-                        cells[7][last_it_position].Value = "Default Generated Device";
-                        cells[9][last_it_position].Value = "FALSE";
-                        last_it_position++;
+                        //create it device
+                        sheet.Rows[lineit].Insert();
+                        linepdu++;
+                        lineoutlet++;
+                        cells[1][lineit].Value = "DEVICE";
+                        cells[2][lineit].Value = "IT Device -- " + currentit;
+                        cells[3][lineit].Value = "IT Device -- " + currentit;
+                        cells[4][lineit].Value = "RACK";
+                        cells[5][lineit].Value = "Rack -- " + currentrack;
+                        cells[6][lineit].Value = "Unknown";
+                        cells[7][lineit].Value = "Default Generated Device";
+                        cells[9][lineit].Value = "FALSE";
+                        lineit++;
                     }
                     //create PDU
-                    cells[1][last_row].Value="PDU";
-                    cells[2][last_row].Value = String.Join(".", pdu_split);
-                    cells[4][last_row].Value = "RACK";
-                    cells[5][last_row].Value = "Rack -- " + last_rack;
-                    last_row++;
-                    sheet.Rows[last_row].Insert();
+                    sheet.Rows[linepdu].Insert();
+                    cells[1][linepdu].Value="PDU";
+                    cells[2][linepdu].Value = String.Join(".", pdu_split);
+                    cells[4][linepdu].Value = "RACK";
+                    cells[5][linepdu].Value = "Rack -- " + currentrack;
+                    linepdu++;
+                    
                     
                 }
             }
@@ -164,6 +188,41 @@ namespace PDU_Writer
         private void openFileDialog1_FileOk(object sender, CancelEventArgs e)
         {
             MessageBox.Show("file");
+        }
+
+        private void label1_Click_1(object sender, EventArgs e)
+        {
+
+        }
+        private void linkLabel1Clicked(object sender,EventArgs e)
+        {
+            linkLabel1.LinkVisited = true;
+            System.Diagnostics.Process.Start("https://github.com/odreikosen/PDU_Writer");
+        }
+
+        private void textBox1_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void debugInstructionsLabel_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label10_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label9_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label12_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }
