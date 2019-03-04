@@ -84,7 +84,7 @@ namespace PDU_Writer
                 currentpdu = (int) numericUpDown2.Value;
                 currentit = currentpdu * ((int)numericUpDown4.Value);
                 currentoutlet = currentit * ((int)numericUpDown5.Value);
-                currentrack = (int) Math.Ceiling((decimal)(currentpdu / ((int)numericUpDown3.Value));
+                currentrack = (int) Math.Ceiling((decimal)(currentpdu / ((int)numericUpDown3.Value)));
                 //Set positions slightly apart to allow for copy and paste
                 Excel.Range cellur = sheet.Cells;
                 cellur[1][3].Value = "DATA_CENTER";
