@@ -70,7 +70,7 @@ namespace PDU_Writer
                 currentpdu = (int) Math.Floor(last_row / 82.5);
                 currentoutlet = currentpdu * 54;
                 currentit = currentpdu * 27;
-                currentrack = currentpdu / 2;
+                currentrack = (int) (Math.Ceiling((decimal)(currentpdu / 2)));
                 //find current lines of pdus
                 linepdu = (int)last_row;
                 lineoutlet = linepdu - currentpdu - 4;
@@ -84,7 +84,7 @@ namespace PDU_Writer
                 currentpdu = (int) numericUpDown2.Value;
                 currentit = currentpdu * ((int)numericUpDown4.Value);
                 currentoutlet = currentit * ((int)numericUpDown5.Value);
-                currentrack = currentpdu / ((int)numericUpDown3.Value);
+                currentrack = (int) Math.Ceiling((decimal)(currentpdu / ((int)numericUpDown3.Value));
                 //Set positions slightly apart to allow for copy and paste
                 Excel.Range cellur = sheet.Cells;
                 cellur[1][3].Value = "DATA_CENTER";

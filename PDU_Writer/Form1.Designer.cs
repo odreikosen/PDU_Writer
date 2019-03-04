@@ -247,6 +247,11 @@ namespace PDU_Writer
             // numericUpDown2
             // 
             this.numericUpDown2.Location = new System.Drawing.Point(112, 126);
+            this.numericUpDown2.Maximum = new decimal(new int[] {
+            999999,
+            0,
+            0,
+            0});
             this.numericUpDown2.Name = "numericUpDown2";
             this.numericUpDown2.Size = new System.Drawing.Size(79, 26);
             this.numericUpDown2.TabIndex = 1;
