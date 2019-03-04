@@ -86,10 +86,34 @@ namespace PDU_Writer
                 currentoutlet = currentit * ((int)numericUpDown5.Value);
                 currentrack = currentpdu / ((int)numericUpDown3.Value);
                 //Set positions slightly apart to allow for copy and paste
-                linerack = 1;
-                lineit = 3;
-                lineoutlet = 5;
-                linepdu = 7;
+                Excel.Range cellur = sheet.Cells;
+                cellur[1][3].Value = "DATA_CENTER";
+                cellur[2][3].Value = "Unassigned Data Center";
+                cellur[3][3].Value = "Unassigned Data Center";
+                cellur[4][3].Value = "Unknown";
+                cellur[5][3].Value = "Unknown";
+                cellur[6][3].Value = "example@example.com";
+                cellur[7][3].Value = "Unknown";
+                cellur[8][3].Value = "Unknown";
+                cellur[9][3].Value = "Unknown";
+                cellur[10][3].Value = "Unknown";
+                cellur[11][3].Value = "0.1";
+                cellur[12][3].Value = "0.06";
+                cellur[13][3].Value = "7";
+                cellur[14][3].Value = "19";
+                cellur[15][3].Value = "0.6";
+                cellur[16][3].Value = "1";
+                cellur[19][3].Value = "2000";
+                cellur[1][8].Value = "ROOM";
+                cellur[2][8].Value = "Room -- 1";
+                cellur[3][8].Value = "Room -- 1";
+                cellur[4][8].Value = "DATA_CENTER";
+                cellur[5][8].Value = "Unassigned Data Center";
+                cellur[6][8].Value = "2000";
+                linerack = 5;
+                lineit = 7;
+                lineoutlet = 9;
+                linepdu = 11;
             }                                
             //last row for pdus and insert empty line
             Excel.Range line = sheet.Rows[linepdu];
@@ -113,9 +137,20 @@ namespace PDU_Writer
                         lineit++;
                         lineoutlet++;
                         Excel.Range cell = sheet.Cells;
-                        cell[1][linerack].Value = "Rack";
+                        cell[1][linerack].Value = "RACK";
                         cell[2][linerack].Value = "Rack -- " + currentrack;
-                        cell[3][linerack].Value = "R" + currentrack;
+                        if (currentrack < 10)
+                        {
+                            cell[3][linerack].Value = "R00" + currentrack;
+                        }
+                        else if (currentrack < 100)
+                        {
+                            cell[3][linerack].Value = "R0" + currentrack;
+                        }
+                        else
+                        {
+                            cell[3][linerack].Value = "R" + currentrack;
+                        }
                         cell[4][linerack].Value = "ROOM";
                         cell[5][linerack].Value = "Room -- 1";
                         cell[6][linerack].Value = "Room -- 1";

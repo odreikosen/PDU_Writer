@@ -446,6 +446,7 @@ namespace PDU_Writer
             this.Controls.Add(this.label1);
             this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.helloWorldLabel);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Form1";
             this.Text = "PDU Utility";
             this.Load += new System.EventHandler(this.Form1_Load);
