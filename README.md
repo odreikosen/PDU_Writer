@@ -14,11 +14,12 @@ There are two options for this step.
 1) The user can either manually input the current amount of PDUs in their Power IQ and adjust the relations between entities if need be (the application is preset to standard relations). The resulting output of this method will be an excel file with the new entities and relations that need to be added to the Power IQ data model along with a CSV of the added PDUs. 
 2) Hit Lets Get Started!
 
-![Step 2](/Images/step1.png)
-*I know there are 128 PDUs currently in my PIQ so I can input 128 for PDUs in the top half and hit Lets Get Started*
+![Manual Step](/Images/step1.png)
+*Knowing there are 128 PDUs currently in my PIQ I can input 128 for PDUs*
 
 #### Input PIQ data file
 1) The user input their current Power IQ data model, which the program will search to find the current amount of PDUs. The resulting output will be the amended Power IQ data model with the new entities and relations added along with a CSV of the added PDUs. 
 2) Hit Lets Get Started!
 
-
+![Data File Step](/Images/step2.png)
+*Selecting my PIQ data model for the program to search for the amount of PDUs*
