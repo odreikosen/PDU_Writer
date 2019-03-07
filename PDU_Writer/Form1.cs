@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows.Forms;
 using Excel = Microsoft.Office.Interop.Excel;
+using System.IO;
 
 // This is the code for your desktop app.
 // Press Ctrl+F5 (or go to Debug > Start Without Debugging) to run your app.
@@ -33,7 +34,7 @@ namespace PDU_Writer
 
         private void button1_Click(object sender, EventArgs e)
         {
-            
+
             OpenFileDialog open = new OpenFileDialog();
             open.Title = "Select Excel File";
             if (open.ShowDialog() == System.Windows.Forms.DialogResult.OK)
@@ -41,192 +42,202 @@ namespace PDU_Writer
                 excel_file = open.FileName;
                 button3.Text = excel_file;
             }
-            
+
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
-            Cursor = Cursors.WaitCursor;
-            pictureBox2.Visible = true;
-            var excel =new Excel.Application();
-            excel.Visible = false;
-            Excel.Workbook workbook;
-            //Sheet for Data model
-            Excel.Worksheet sheet;
-            //Sheet for PDU List
-            Excel.Worksheet pdu_sheet;
-            //The current amount of entities in PIQ
-            int currentpdu;
-            int currentoutlet;
-            int currentit;
-            int currentrack;
-            //The current position of entity in spreadsheet
-            int linepdu;
-            int lineoutlet;
-            int lineit;
-            int linerack;
-            //Incrementor for PDU sheet
-            int pdu_increment = 1;
-            if (!String.IsNullOrEmpty(excel_file))
+            try
             {
-                excel.Workbooks.Open(Filename: excel_file, ReadOnly: false);
-                 workbook = excel.ActiveWorkbook;
-                 sheet = workbook.ActiveSheet;
-                //Finding last row to determine current PDU
-                Excel.Range last = sheet.Cells.SpecialCells(Excel.XlCellType.xlCellTypeLastCell, Type.Missing);
-                double last_row = last.Row - 1;
-                currentpdu = (int) Math.Floor(last_row / 82.5);
-                currentoutlet = currentpdu * 54;
-                currentit = currentpdu * 27;
-                currentrack = (int) (Math.Ceiling((decimal)(currentpdu / 2)));
-                //find current lines of pdus
-                linepdu = (int)last_row;
-                lineoutlet = linepdu - currentpdu - 4;
-                lineit = lineoutlet - currentoutlet - 2;
-                linerack = lineit -currentit - 2;
-            } else
-            {
-                workbook=excel.Workbooks.Add();
-                sheet = workbook.ActiveSheet;
-                //Find amount of pdus based off of relationships
-                currentpdu = (int) numericUpDown2.Value;
-                currentit = currentpdu * ((int)numericUpDown4.Value);
-                currentoutlet = currentit * ((int)numericUpDown5.Value);
-                currentrack = (int) Math.Ceiling((decimal)(currentpdu / ((int)numericUpDown3.Value)));
-                //Set positions slightly apart to allow for copy and paste
-                Excel.Range cellur = sheet.Cells;
-                cellur[1][1].Value = "DATA_CENTER";
-                cellur[2][1].Value = "Unassigned Data Center";
-                cellur[3][1].Value = "Unassigned Data Center";
-                cellur[4][1].Value = "Unknown";
-                cellur[5][1].Value = "Unknown";
-                cellur[6][1].Value = "example@example.com";
-                cellur[7][1].Value = "Unknown";
-                cellur[8][1].Value = "Unknown";
-                cellur[9][1].Value = "Unknown";
-                cellur[10][1].Value = "Unknown";
-                cellur[11][1].Value = "0.1";
-                cellur[12][1].Value = "0.06";
-                cellur[13][1].Value = "7";
-                cellur[14][1].Value = "19";
-                cellur[15][1].Value = "0.6";
-                cellur[16][1].Value = "1";
-                cellur[19][1].Value = "2000";
-                cellur[1][3].Value = "ROOM";
-                cellur[2][3].Value = "Room -- 1";
-                cellur[3][3].Value = "Room -- 1";
-                cellur[4][3].Value = "DATA_CENTER";
-                cellur[5][3].Value = "Unassigned Data Center";
-                cellur[6][3].Value = "2000";
-                linerack = 5;
-                lineit = 7;
-                lineoutlet = 9;
-                linepdu = 11;
-            }
-            //Add pdu sheet to workbook 
-            pdu_sheet = workbook.Worksheets.Add();
-            pdu_sheet.Name = "PDU List";
-            sheet.Name = "PIQ Data Model";
-            //last row for pdus and insert empty line
-            Excel.Range line = sheet.Rows[linepdu];
-            line.Insert();
-            //i=pdu index in pdus
-            for(int i = 0; i < pdus.Length; i++)
-            {
-           
-                string pdu = pdus[i].Trim();
-                string [] pdu_split = pdu.Split('.');
-                int q = Int32.Parse(pdu_split[3]);
-              
-                //j=pdu suffix
-                for(int j = q; j <=(int)numericUpDown1.Value; j++)
+                BackgroundWorker background = new BackgroundWorker();
+                Cursor = Cursors.WaitCursor;
+
+                var excel = new Excel.Application();
+                excel.Visible = checkBox1.Checked;
+                Excel.Workbook workbook;
+                //Sheet for Data model
+                Excel.Worksheet sheet;
+                //Sheet for PDU List
+                Excel.Worksheet pdu_sheet;
+                //The current amount of entities in PIQ
+                int currentpdu;
+                int currentoutlet;
+                int currentit;
+                int currentrack;
+                //The current position of entity in spreadsheet
+                int linepdu;
+                int lineoutlet;
+                int lineit;
+                int linerack;
+                //Incrementor for PDU sheet
+                int pdu_increment = 1;
+                if (!String.IsNullOrEmpty(excel_file))
                 {
-                    //add a new room for every 2 pdus and increment outlet,it,and pdu positions
-                    if (j % (int)numericUpDown3.Value == 0)
+                    excel.Workbooks.Open(Filename: excel_file, ReadOnly: false);
+                    workbook = excel.ActiveWorkbook;
+                    sheet = workbook.ActiveSheet;
+                    //Finding last row to determine current PDU
+                    Excel.Range last = sheet.Cells.SpecialCells(Excel.XlCellType.xlCellTypeLastCell, Type.Missing);
+                    double last_row = last.Row - 1;
+                    currentpdu = (int)Math.Floor(last_row / 82.5);
+                    currentoutlet = currentpdu * 54;
+                    currentit = currentpdu * 27;
+                    currentrack = (int)(Math.Ceiling((decimal)(currentpdu / 2)));
+                    //find current lines of pdus
+                    linepdu = (int)last_row;
+                    lineoutlet = linepdu - currentpdu - 4;
+                    lineit = lineoutlet - currentoutlet - 2;
+                    linerack = lineit - currentit - 2;
+                }
+                else
+                {
+                    workbook = excel.Workbooks.Add();
+                    sheet = workbook.ActiveSheet;
+                    //Find amount of pdus based off of relationships
+                    currentpdu = (int)numericUpDown2.Value;
+                    currentit = currentpdu * ((int)numericUpDown4.Value);
+                    currentoutlet = currentit * ((int)numericUpDown5.Value);
+                    currentrack = (int)Math.Ceiling((decimal)(currentpdu / ((int)numericUpDown3.Value)));
+                    //Set positions slightly apart to allow for copy and paste
+                    Excel.Range cellur = sheet.Cells;
+                    cellur[1][1].Value = "DATA_CENTER";
+                    cellur[2][1].Value = "Unassigned Data Center";
+                    cellur[3][1].Value = "Unassigned Data Center";
+                    cellur[4][1].Value = "Unknown";
+                    cellur[5][1].Value = "Unknown";
+                    cellur[6][1].Value = "example@example.com";
+                    cellur[7][1].Value = "Unknown";
+                    cellur[8][1].Value = "Unknown";
+                    cellur[9][1].Value = "Unknown";
+                    cellur[10][1].Value = "Unknown";
+                    cellur[11][1].Value = "0.1";
+                    cellur[12][1].Value = "0.06";
+                    cellur[13][1].Value = "7";
+                    cellur[14][1].Value = "19";
+                    cellur[15][1].Value = "0.6";
+                    cellur[16][1].Value = "1";
+                    cellur[19][1].Value = "2000";
+                    cellur[1][3].Value = "ROOM";
+                    cellur[2][3].Value = "Room -- 1";
+                    cellur[3][3].Value = "Room -- 1";
+                    cellur[4][3].Value = "DATA_CENTER";
+                    cellur[5][3].Value = "Unassigned Data Center";
+                    cellur[6][3].Value = "2000";
+                    linerack = 5;
+                    lineit = 7;
+                    lineoutlet = 9;
+                    linepdu = 11;
+                }
+                //Add pdu sheet to workbook 
+                pdu_sheet = workbook.Worksheets.Add();
+                pdu_sheet.Name = "PDU List";
+                sheet.Name = "PIQ Data Model";
+                //last row for pdus and insert empty line
+                Excel.Range line = sheet.Rows[linepdu];
+                line.Insert();
+                for (int i = 0; i < pdus.Length; i++)
+                {
+
+                    string pdu = pdus[i].Trim();
+                    string[] pdu_split = pdu.Split('.');
+                    int q = Int32.Parse(pdu_split[3]);
+
+                    //j=pdu suffix
+                    for (int j = q; j <= (int)numericUpDown1.Value; j++)
                     {
-                        currentrack++;
-                        sheet.Rows[linerack].Insert();
-                        linepdu++;
-                        lineit++;
-                        lineoutlet++;
-                        Excel.Range cell = sheet.Cells;
-                        cell[1][linerack].Value = "RACK";
-                        cell[2][linerack].Value = "Rack -- " + currentrack;
-                        if (currentrack < 10)
+                        //add a new room for every 2 pdus and increment outlet,it,and pdu positions
+                        if (j % (int)numericUpDown3.Value == 0)
                         {
-                            cell[3][linerack].Value = "R00" + currentrack;
-                        }
-                        else if (currentrack < 100)
-                        {
-                            cell[3][linerack].Value = "R0" + currentrack;
-                        }
-                        else
-                        {
-                            cell[3][linerack].Value = "R" + currentrack;
-                        }
-                        cell[4][linerack].Value = "ROOM";
-                        cell[5][linerack].Value = "Room -- 1";
-                        cell[6][linerack].Value = "Room -- 1";
-                        cell[7][linerack].Value = "2";
-                        cell[8][linerack].Value = "75";
-                        cell[9][linerack].Value = "65";
-                        linerack++;
-                    }
-                    pdu_split[3] = j.ToString();
-                    Excel.Range cells = sheet.Cells;
-                    //create 27 IT devices for each PDU
-                    for(int a = 0; a < (int) numericUpDown4.Value; a++)
-                    {
-                        currentit++;
-                        //create two outlets for each IT devices
-                        for(int b = 0; b < (int) numericUpDown5.Value; b++)
-                        {
-                            sheet.Rows[lineoutlet].Insert();
+                            currentrack++;
+                            sheet.Rows[linerack].Insert();
                             linepdu++;
-                            cells[1][lineoutlet].Value = "OUTLET";
-                            cells[2][lineoutlet].Value = String.Join(".", pdu_split);
-                            cells[4][lineoutlet].Value = (a * 2) + b + 1;
-                            cells[5][lineoutlet].Value = "DEVICE";
-                            cells[6][lineoutlet].Value = "IT Device -- " + currentit;
+                            lineit++;
                             lineoutlet++;
+                            Excel.Range cell = sheet.Cells;
+                            cell[1][linerack].Value = "RACK";
+                            cell[2][linerack].Value = "Rack -- " + currentrack;
+                            if (currentrack < 10)
+                            {
+                                cell[3][linerack].Value = "R00" + currentrack;
+                            }
+                            else if (currentrack < 100)
+                            {
+                                cell[3][linerack].Value = "R0" + currentrack;
+                            }
+                            else
+                            {
+                                cell[3][linerack].Value = "R" + currentrack;
+                            }
+                            cell[4][linerack].Value = "ROOM";
+                            cell[5][linerack].Value = "Room -- 1";
+                            cell[6][linerack].Value = "Room -- 1";
+                            cell[7][linerack].Value = "2";
+                            cell[8][linerack].Value = "75";
+                            cell[9][linerack].Value = "65";
+                            linerack++;
                         }
-                        //create it device
-                        sheet.Rows[lineit].Insert();
+                        pdu_split[3] = j.ToString();
+                        Excel.Range cells = sheet.Cells;
+                        //create 27 IT devices for each PDU
+                        for (int a = 0; a < (int)numericUpDown4.Value; a++)
+                        {
+                            currentit++;
+                            //create two outlets for each IT devices
+                            for (int b = 0; b < (int)numericUpDown5.Value; b++)
+                            {
+                                sheet.Rows[lineoutlet].Insert();
+                                linepdu++;
+                                cells[1][lineoutlet].Value = "OUTLET";
+                                cells[2][lineoutlet].Value = String.Join(".", pdu_split);
+                                cells[4][lineoutlet].Value = (a * 2) + b + 1;
+                                cells[5][lineoutlet].Value = "DEVICE";
+                                cells[6][lineoutlet].Value = "IT Device -- " + currentit;
+                                lineoutlet++;
+                            }
+                            //create it device
+                            sheet.Rows[lineit].Insert();
+                            linepdu++;
+                            lineoutlet++;
+                            cells[1][lineit].Value = "DEVICE";
+                            cells[2][lineit].Value = "IT Device -- " + currentit;
+                            cells[3][lineit].Value = "IT Device -- " + currentit;
+                            cells[4][lineit].Value = "RACK";
+                            cells[5][lineit].Value = "Rack -- " + currentrack;
+                            cells[6][lineit].Value = "Unknown";
+                            cells[7][lineit].Value = "Default Generated Device";
+                            cells[9][lineit].Value = "FALSE";
+                            lineit++;
+                        }
+                        //create PDU
+                        sheet.Rows[linepdu].Insert();
+                        cells[1][linepdu].Value = "PDU";
+                        string pdu_value = String.Join(".", pdu_split);
+                        cells[2][linepdu].Value = pdu_value;
+                        cells[4][linepdu].Value = "RACK";
+                        cells[5][linepdu].Value = "Rack -- " + currentrack;
                         linepdu++;
-                        lineoutlet++;
-                        cells[1][lineit].Value = "DEVICE";
-                        cells[2][lineit].Value = "IT Device -- " + currentit;
-                        cells[3][lineit].Value = "IT Device -- " + currentit;
-                        cells[4][lineit].Value = "RACK";
-                        cells[5][lineit].Value = "Rack -- " + currentrack;
-                        cells[6][lineit].Value = "Unknown";
-                        cells[7][lineit].Value = "Default Generated Device";
-                        cells[9][lineit].Value = "FALSE";
-                        lineit++;
+                        //Add PDU to pdu list sheet
+                        pdu_sheet.Cells[1][pdu_increment].Value = pdu_value;
+                        pdu_sheet.Cells[4][pdu_increment].Value = "admin";
+                        pdu_sheet.Cells[5][pdu_increment].Value = "raritan";
+                        pdu_sheet.Cells[6][pdu_increment].Value = "private";
+                        pdu_sheet.Cells[7][pdu_increment].Value = "FALSE";
+                        pdu_increment++;
                     }
-                    //create PDU
-                    sheet.Rows[linepdu].Insert();
-                    cells[1][linepdu].Value="PDU";
-                    string pdu_value = String.Join(".", pdu_split);
-                    cells[2][linepdu].Value = pdu_value;
-                    cells[4][linepdu].Value = "RACK";
-                    cells[5][linepdu].Value = "Rack -- " + currentrack;
-                    linepdu++;
-                    //Add PDU to pdu list sheet
-                    pdu_sheet.Cells[1][pdu_increment].Value = pdu_value;
-                    pdu_sheet.Cells[4][pdu_increment].Value = "admin";
-                    pdu_sheet.Cells[5][pdu_increment].Value = "raritan";
-                    pdu_sheet.Cells[6][pdu_increment].Value = "private";
-                    pdu_sheet.Cells[7][pdu_increment].Value = "FALSE";
-                    pdu_increment++;
+                }
+
+                MessageBox.Show("Your file has been succesfully finished.");
+                excel.Visible = true;
+                Cursor = Cursors.Arrow;
+            }
+            catch (Exception ee)
+            {
+                using(StreamWriter w = File.AppendText("log.txt"))
+                {
+                    w.Write("\nException:" + ee.Message + "\n" + ee.StackTrace+"-------------------");
                 }
             }
-            MessageBox.Show("Your file has been succesfully finished.");
-            excel.Visible = true;
-            Cursor = Cursors.Arrow;
-            pictureBox2.Visible = false;
         }
-
         private void Form1_Load(object sender, EventArgs e)
         {
 
@@ -281,5 +292,6 @@ namespace PDU_Writer
         {
 
         }
+       
     }
 }
