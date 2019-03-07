@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows.Forms;
 using Excel = Microsoft.Office.Interop.Excel;
@@ -13,7 +14,7 @@ namespace PDU_Writer
     {
         private string excel_file;
         private string[] pdus;
-
+        private List<string> pdu_list;
         public Form1()
         {
             InitializeComponent();
@@ -45,10 +46,15 @@ namespace PDU_Writer
 
         private void button2_Click(object sender, EventArgs e)
         {
+            Cursor = Cursors.WaitCursor;
+            pictureBox2.Visible = true;
             var excel =new Excel.Application();
-            excel.Visible = true;
+            excel.Visible = false;
             Excel.Workbook workbook;
+            //Sheet for Data model
             Excel.Worksheet sheet;
+            //Sheet for PDU List
+            Excel.Worksheet pdu_sheet;
             //The current amount of entities in PIQ
             int currentpdu;
             int currentoutlet;
@@ -59,6 +65,8 @@ namespace PDU_Writer
             int lineoutlet;
             int lineit;
             int linerack;
+            //Incrementor for PDU sheet
+            int pdu_increment = 1;
             if (!String.IsNullOrEmpty(excel_file))
             {
                 excel.Workbooks.Open(Filename: excel_file, ReadOnly: false);
@@ -87,44 +95,49 @@ namespace PDU_Writer
                 currentrack = (int) Math.Ceiling((decimal)(currentpdu / ((int)numericUpDown3.Value)));
                 //Set positions slightly apart to allow for copy and paste
                 Excel.Range cellur = sheet.Cells;
-                cellur[1][3].Value = "DATA_CENTER";
-                cellur[2][3].Value = "Unassigned Data Center";
-                cellur[3][3].Value = "Unassigned Data Center";
-                cellur[4][3].Value = "Unknown";
-                cellur[5][3].Value = "Unknown";
-                cellur[6][3].Value = "example@example.com";
-                cellur[7][3].Value = "Unknown";
-                cellur[8][3].Value = "Unknown";
-                cellur[9][3].Value = "Unknown";
-                cellur[10][3].Value = "Unknown";
-                cellur[11][3].Value = "0.1";
-                cellur[12][3].Value = "0.06";
-                cellur[13][3].Value = "7";
-                cellur[14][3].Value = "19";
-                cellur[15][3].Value = "0.6";
-                cellur[16][3].Value = "1";
-                cellur[19][3].Value = "2000";
-                cellur[1][8].Value = "ROOM";
-                cellur[2][8].Value = "Room -- 1";
-                cellur[3][8].Value = "Room -- 1";
-                cellur[4][8].Value = "DATA_CENTER";
-                cellur[5][8].Value = "Unassigned Data Center";
-                cellur[6][8].Value = "2000";
+                cellur[1][1].Value = "DATA_CENTER";
+                cellur[2][1].Value = "Unassigned Data Center";
+                cellur[3][1].Value = "Unassigned Data Center";
+                cellur[4][1].Value = "Unknown";
+                cellur[5][1].Value = "Unknown";
+                cellur[6][1].Value = "example@example.com";
+                cellur[7][1].Value = "Unknown";
+                cellur[8][1].Value = "Unknown";
+                cellur[9][1].Value = "Unknown";
+                cellur[10][1].Value = "Unknown";
+                cellur[11][1].Value = "0.1";
+                cellur[12][1].Value = "0.06";
+                cellur[13][1].Value = "7";
+                cellur[14][1].Value = "19";
+                cellur[15][1].Value = "0.6";
+                cellur[16][1].Value = "1";
+                cellur[19][1].Value = "2000";
+                cellur[1][3].Value = "ROOM";
+                cellur[2][3].Value = "Room -- 1";
+                cellur[3][3].Value = "Room -- 1";
+                cellur[4][3].Value = "DATA_CENTER";
+                cellur[5][3].Value = "Unassigned Data Center";
+                cellur[6][3].Value = "2000";
                 linerack = 5;
                 lineit = 7;
                 lineoutlet = 9;
                 linepdu = 11;
-            }                                
+            }
+            //Add pdu sheet to workbook 
+            pdu_sheet = workbook.Worksheets.Add();
+            pdu_sheet.Name = "PDU List";
+            sheet.Name = "PIQ Data Model";
             //last row for pdus and insert empty line
             Excel.Range line = sheet.Rows[linepdu];
             line.Insert();
-          
             //i=pdu index in pdus
             for(int i = 0; i < pdus.Length; i++)
             {
+           
                 string pdu = pdus[i].Trim();
                 string [] pdu_split = pdu.Split('.');
                 int q = Int32.Parse(pdu_split[3]);
+              
                 //j=pdu suffix
                 for(int j = q; j <=(int)numericUpDown1.Value; j++)
                 {
@@ -194,15 +207,24 @@ namespace PDU_Writer
                     //create PDU
                     sheet.Rows[linepdu].Insert();
                     cells[1][linepdu].Value="PDU";
-                    cells[2][linepdu].Value = String.Join(".", pdu_split);
+                    string pdu_value = String.Join(".", pdu_split);
+                    cells[2][linepdu].Value = pdu_value;
                     cells[4][linepdu].Value = "RACK";
                     cells[5][linepdu].Value = "Rack -- " + currentrack;
                     linepdu++;
-                    
-                    
+                    //Add PDU to pdu list sheet
+                    pdu_sheet.Cells[1][pdu_increment].Value = pdu_value;
+                    pdu_sheet.Cells[4][pdu_increment].Value = "admin";
+                    pdu_sheet.Cells[5][pdu_increment].Value = "raritan";
+                    pdu_sheet.Cells[6][pdu_increment].Value = "private";
+                    pdu_sheet.Cells[7][pdu_increment].Value = "FALSE";
+                    pdu_increment++;
                 }
             }
-           
+            MessageBox.Show("Your file has been succesfully finished.");
+            excel.Visible = true;
+            Cursor = Cursors.Arrow;
+            pictureBox2.Visible = false;
         }
 
         private void Form1_Load(object sender, EventArgs e)
